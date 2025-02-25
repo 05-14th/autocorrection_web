@@ -5,6 +5,7 @@ const Home: React.FC = () => {
 
   const [text, setText] = useState("");
   const maxWords = 500;
+  const serverUrl = import.meta.env.VITE_APP_SERVERHOST;
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const words = e.target.value.split(/\s+/).filter(word => word.length > 0); // Count words correctly
@@ -19,8 +20,7 @@ const Home: React.FC = () => {
     event.preventDefault();
     try {
       const response = await axios.post(
-        ServerURL + "/employee-login",
-        text,
+        serverUrl + "/correct_grammar", {"text": text},
       );
     } catch (error) {
       console.error(error);
