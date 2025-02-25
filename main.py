@@ -1,30 +1,53 @@
 from transformers import pipeline
-from transformers import pipeline
+from deepmultilingualpunctuation import PunctuationModel
 import difflib
 
-# Load the Grammar Correction T5 Model from Hugging Face
+# Load the necessary models
 grammar_correction_model = pipeline(task="text2text-generation", model="hassaanik/grammar-correction-model")
-fix_spelling = pipeline("text2text-generation",model="oliverguhr/spelling-correction-english-base")
+fix_spelling = pipeline("text2text-generation", model="oliverguhr/spelling-correction-english-base")
+model = PunctuationModel()
 
-# Input text with grammatical errors
+def correct_text(input_text):
+    """Corrects spelling, grammar, and punctuation."""
+    if not input_text.strip():
+        return "Error: No input provided."
+
+    # Fix spelling first
+    spelling_result = fix_spelling(input_text, max_length=2048)
+    corrected_spelling = spelling_result[0]['generated_text']
+
+    # Fix grammar
+    grammar_result = grammar_correction_model(corrected_spelling, max_length=200, num_beams=5, no_repeat_ngram_size=2)
+    corrected_grammar = grammar_result[0]['generated_text']
+
+    # Restore punctuation
+    final_output = model.restore_punctuation(corrected_grammar)
+
+    return corrected_spelling, corrected_grammar, final_output
+
+def find_errors(original, corrected):
+    """Finds differences between the original and corrected text."""
+    diff = list(difflib.ndiff(original.split(), corrected.split()))
+    
+    incorrect_words = []
+    for i, d in enumerate(diff):
+        if d.startswith("- "):  # Indicates deletion
+            incorrect_words.append(d[2:])  # Extract word
+    
+    return incorrect_words
+
+# User input
 input_text = input("Words: ")
 
-# Get corrected output
-result = grammar_correction_model(str(fix_spelling(input_text,max_length=2048)), max_length=200, num_beams=5, no_repeat_ngram_size=2)
-corrected_text = result[0]['generated_text']
+# Process correction
+spelling_corrected, grammar_corrected, final_result = correct_text(input_text)
 
-# Identify incorrect parts
-def find_errors(original, corrected):
-    original_words = original.split()
-    corrected_words = corrected.split()
-    
-    diff = difflib.ndiff(original_words, corrected_words)
-    incorrect_parts = [word for word in original_words if f"- {word}" in diff]
+# Find incorrect parts
+incorrect_parts = find_errors(input_text, grammar_corrected)
 
-    return incorrect_parts
-
-incorrect_parts = find_errors(input_text, corrected_text)
-
-# Print the incorrect parts and the corrected output
-print("Incorrect parts:", incorrect_parts)
-print("Corrected Output:", corrected_text)
+# Output results
+print("\nOriginal Input:  ", input_text)
+print("Fixed Spelling:  ", spelling_corrected)
+print("Fixed Grammar:   ", grammar_corrected)
+print("Final Output:    ", final_result)
+print("Incorrect Words: ", incorrect_parts)
