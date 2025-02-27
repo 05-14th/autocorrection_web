@@ -31,7 +31,7 @@ const Home: React.FC = () => {
     <div className="flex flex-col md:flex-row justify-center items-center min-h-screen bg-gray-100 p-4">
       <div className="flex flex-col md:flex-row w-full max-w-screen-lg space-y-4 md:space-y-0 md:space-x-4">
         <section className="w-full md:w-1/2 flex flex-col">
-          <form action="" method="post" className="flex flex-col space-y-2">
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-2">
             <textarea
               className="w-full h-40 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               placeholder="Enter text to correct here..."
