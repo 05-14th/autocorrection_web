@@ -4,6 +4,7 @@ import axios from "axios";
 const Home: React.FC = () => {
 
   const [text, setText] = useState("");
+  const [resultText, setResultText] = useState("");
   const maxWords = 500;
   const serverUrl = import.meta.env.VITE_APP_SERVERHOST;
 
@@ -20,8 +21,9 @@ const Home: React.FC = () => {
     event.preventDefault();
     try {
       const response = await axios.post(
-        serverUrl + "/correct_grammar", {"text": text},
+        `${serverUrl}/correct_grammar`, {"text": text},
       );
+      setResultText(response.data.corrected);
     } catch (error) {
       console.error(error);
     }
@@ -50,6 +52,8 @@ const Home: React.FC = () => {
           <textarea 
             className="w-full h-40 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             placeholder="Corrected text will display here..."
+            value={resultText}
+            onChange={(e) => setResultText(e.target.value)}
             readOnly
           ></textarea>
         </section>

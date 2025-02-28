@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from transformers import pipeline
 from deepmultilingualpunctuation import PunctuationModel
 import torch
@@ -6,6 +7,8 @@ import textwrap
 from spellchecker import SpellChecker
 
 app = Flask(__name__)
+
+CORS(app)
 
 # Detect device (Use GPU if available, else use CPU)
 device = 0 if torch.cuda.is_available() else -1
