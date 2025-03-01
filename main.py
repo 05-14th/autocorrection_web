@@ -14,7 +14,7 @@ CORS(app)
 device = 0 if torch.cuda.is_available() else -1
 
 # Load optimized models
-grammar_correction_model = pipeline("text2text-generation", model="hassaanik/grammar-correction-model", device=device)
+grammar_correction_model = pipeline("text2text-generation", model="vennify/t5-base-grammar-correction", device=device)
 model = PunctuationModel()
 spell = SpellChecker()
 
@@ -31,20 +31,18 @@ def correct_text(input_text):
     chunks = split_into_chunks(input_text)
     initial_spelling = spell.unknown(chunks)
 
-    incorrect_spelling = []
-    for words in initial_spelling:
-        incorrect_spelling.append(words)
-
     corrected_spelling = []
-    for sentence in initial_spelling:
-        corrected_spelling.append(spell.correction(sentence))
+    for word in initial_spelling:
+        corrected_word = spell.correction(word)
+        corrected_spelling.append(corrected_word if corrected_word else word)
 
-    for misspelled in incorrect_spelling:
-        chunks[chunks.index(misspelled)] = corrected_spelling[incorrect_spelling.index(misspelled)]
-
+    for i, misspelled in enumerate(initial_spelling):
+        if misspelled in chunks:  
+            chunks[chunks.index(misspelled)] = corrected_spelling[i]
+    
     spelling_phase = " ".join(chunks)
     punctuation_phase = model.restore_punctuation(spelling_phase)
-    grammar_chunks = punctuation_phase.strip().split(".")
+    grammar_chunks = textwrap.wrap(punctuation_phase, width=100, break_long_words=False)
     corrected_chunks = []
     
     for chunk in grammar_chunks:
@@ -67,6 +65,7 @@ def process_text():
         return jsonify({"original": input_text, "corrected": final_result})
     
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
