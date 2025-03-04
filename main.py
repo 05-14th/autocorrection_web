@@ -2,8 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from transformers import pipeline
 from deepmultilingualpunctuation import PunctuationModel
-import torch
-import textwrap
+import torch, textwrap, re
 from spellchecker import SpellChecker
 
 app = Flask(__name__)
@@ -15,6 +14,7 @@ device = 0 if torch.cuda.is_available() else -1
 
 # Load optimized models
 grammar_correction_model = pipeline("text2text-generation", model="vennify/t5-base-grammar-correction", device=device)
+grammar_correction_model_ = pipeline("text2text-generation", model="hassaanik/grammar-correction-model", device=device)
 model = PunctuationModel()
 spell = SpellChecker()
 
@@ -49,7 +49,7 @@ def correct_text(input_text):
         grammar_result = grammar_correction_model(chunk, max_length=500, num_beams=3)[0]['generated_text']
         corrected_chunks.append(grammar_result)
 
-    corrected_chunks.pop()
+    #corrected_chunks.pop()
 
     return " ".join(corrected_chunks)
 
@@ -58,11 +58,19 @@ def process_text():
     try:
         text_data = request.json
         input_text = text_data.get('text', '')
+        current_text = text_data.get('current', '')
+        text_to_exclude = re.split(r'(?<=[.!?])\s+', current_text)
+        result = current_text
 
-        # Process correction
-        final_result = correct_text(input_text)
+        sentences = re.split(r'(?<=[.!?])\s+', input_text)
 
-        return jsonify({"original": input_text, "corrected": final_result})
+        for sentence in sentences:
+            if correct_text(sentence) in text_to_exclude:
+                sentences.pop(sentences.index(sentence))
+        
+        result += correct_text(sentences[0])
+
+        return jsonify({"corrected": result})
     
     except Exception as e:
         print(e)

@@ -19,15 +19,15 @@ const Home: React.FC = () => {
     event.preventDefault();
     try {
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-      let correctedText = "";
-      for (const sentence of sentences) {
-        const response = await axios.post(`${serverUrl}/correct_grammar`, {
-          text: sentence.trim(),
-          current: current,
-        });
-        correctedText += response.data.corrected + " ";
-        setResultText(correctedText.trim());
-      }
+      const response = await Promise.all(
+        sentences.map((sentence) =>
+          axios.post(`${serverUrl}/correct_grammar`, {
+            text: sentence.trim(),
+            current: current
+          })
+        )
+      );
+      setResultText(response.map((res) => res.data.corrected).join(" "));
       setCurrent(resultText);
     } catch (error) {
       console.error(error);
