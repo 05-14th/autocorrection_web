@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const Home: React.FC = () => {
+const Main: React.FC = () => {
   const [text, setText] = useState("");
   const [resultText, setResultText] = useState("");
   const [current, setCurrent] = useState("");
@@ -19,15 +19,15 @@ const Home: React.FC = () => {
     event.preventDefault();
     try {
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-      const response = await Promise.all(
-        sentences.map((sentence) =>
-          axios.post(`${serverUrl}/correct_grammar`, {
-            text: sentence.trim(),
-            current: current
-          })
-        )
-      );
-      setResultText(response.map((res) => res.data.corrected).join(" "));
+      let correctedText = "";
+      for (const sentence of sentences) {
+        const response = await axios.post(`${serverUrl}/correct_grammar`, {
+          text: sentence.trim(),
+          current: current,
+        });
+        correctedText += response.data.corrected + " ";
+        setResultText(correctedText.trim());
+      }
       setCurrent(resultText);
     } catch (error) {
       console.error(error);
@@ -35,13 +35,14 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-center items-center min-h-screen bg-gray-100 p-4">
-      <div className="flex flex-col md:flex-row w-full max-w-screen-lg space-y-4 md:space-y-0 md:space-x-4">
+    <div className="bg-black-900">
+      <div className="flex flex-col md:flex-row justify-center items-center min-h-screen bg-gray-100 p-4">
+      <div className="flex flex-col md:flex-row w-full h-full max-w-screen-lg space-y-4 md:space-y-0 md:space-x-4">
         {/* Input Section */}
         <section className="w-full md:w-1/2 flex flex-col flex-1">
           <form onSubmit={handleSubmit} className="flex flex-col space-y-2 flex-1">
             <textarea
-              className="w-full h-80 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none flex-grow"
+              className="w-full h-80 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none flex-grow"
               placeholder="Enter text to correct here..."
               value={text}
               onChange={handleTextChange}
@@ -52,7 +53,7 @@ const Home: React.FC = () => {
             <input
               type="submit"
               value="Submit"
-              className="bg-blue-500 text-white font-semibold py-2 rounded-md cursor-pointer hover:bg-blue-700 transition"
+              className="bg-purple-500 text-white font-semibold py-2 rounded-md cursor-pointer hover:bg-purple-700 transition"
             />
           </form>
         </section>
@@ -60,7 +61,7 @@ const Home: React.FC = () => {
         {/* Output Section */}
         <section className="w-full md:w-1/2 flex flex-col flex-1">
           <textarea
-            className="w-full h-80 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none flex-grow"
+            className="w-full h-80 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none flex-grow"
             placeholder="Corrected text will display here..."
             value={resultText}
             onChange={(e) => setResultText(e.target.value)}
@@ -72,7 +73,9 @@ const Home: React.FC = () => {
         </section>
       </div>
     </div>
+  
+    </div>
   );
 };
 
-export default Home;
+export default Main;

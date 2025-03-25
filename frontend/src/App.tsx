@@ -12,25 +12,6 @@ const App: React.FC = () => {
     <ParallaxProvider>
       <div className="min-h-screen bg-black">
         <Navbar />
-        {/* Parallax Section */}
-        <ParallaxBanner
-          layers={[
-            { image: "/src/assets/first_parallax.jpg", speed: -20 },
-            {
-              speed: -10,
-              children: (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                  <h1 className="text-white text-6xl font-bold">
-                    Welcome to My Site
-                  </h1>
-                </div>
-              ),
-            },
-            { image: "/images/foreground.png", speed: -5 },
-          ]}
-          className="relative w-full h-[500px] object-cover"
-        />
-
         {/* Page Content */}
         <div className="">
           <Routes>
