@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package grammar;
+
+option go_package = "your/go/package";  // Only needed for Go
+
+service GrammarService {
+  rpc CorrectGrammar (GrammarRequest) returns (GrammarResponse);
+}
+
+message GrammarRequest {
+  string text = 1;
+}
+
+message GrammarResponse {
+  string corrected_text = 1;
+}
