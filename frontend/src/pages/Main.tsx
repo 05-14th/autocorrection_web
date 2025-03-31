@@ -20,24 +20,32 @@ const Main: React.FC = () => {
     event.preventDefault();
     try {
       console.log("Clicked");
-      setResultText("");
+      setResultText(""); // Clear displayed text
       setIsClicked(true);
+  
+      let updatedText = ""; // ✅ Track corrected sentences here
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-      let correctedText = "";
+  
       for (const sentence of sentences) {
         const response = await axios.post(`${serverUrl}/correct_grammar`, {
           text: sentence.trim(),
-          current: current,
+          current: "", // ✅ Send empty to prevent duplicates
         });
-        correctedText += response.data.corrected + " ";
-        setResultText(correctedText.trim());
+  
+        const newSentence = response.data.corrected.trim();
+        updatedText += newSentence + " "; // ✅ Accumulate properly
+  
+        // ✅ Dynamically update resultText correctly
+        setResultText(prev => `${prev} ${newSentence}`.trim());
       }
-      setCurrent(resultText);
+  
+      setCurrent(updatedText.trim()); // ✅ Store the latest correct text
       setIsClicked(false);
     } catch (error) {
       console.error(error);
     }
   };
+  
 
   return (
     <div className="bg-black min-h-screen flex items-center justify-center p-4">
