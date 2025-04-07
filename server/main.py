@@ -40,23 +40,52 @@ def correct_spelling(text):
     corrected_words = [sym_spell.lookup(word, verbosity=0, max_edit_distance=2) for word in words]
     return ' '.join([c[0].term if c else word for c, word in zip(corrected_words, words)])
 
+# Function to collect punctuation differences with positions and nearby words
+def collect_punctuation_changes(original, corrected):
+    diffs = []
+    orig_chars = list(original)
+    corr_chars = list(corrected)
+
+    min_len = min(len(orig_chars), len(corr_chars))
+
+    for i in range(min_len):
+        if orig_chars[i] != corr_chars[i] and orig_chars[i] in ".!?,;:":
+            # Capture the words near the punctuation
+            before_word = original[:i].strip().split()[-1] if i > 0 else ""
+            after_word = original[i + 1:].strip().split()[0] if i + 1 < len(original) else ""
+
+            diffs.append({
+                "position": i,
+                "original": orig_chars[i],
+                "corrected": corr_chars[i],
+                "before_word": before_word,
+                "after_word": after_word
+            })
+
+    return diffs
+
 # Async function for grammar correction
 async def correct_text(text: str):
     if not text.strip():
-        return "Error: No input provided."
-    
+        return "Error: No input provided.", []
+
     # Step 1: Spelling correction
     spelling_corrected = correct_spelling(text)
-    
+
     # Step 2: Punctuation restoration
     punctuation_corrected = punctuation_model.restore_punctuation(spelling_corrected)
-    
+
+    # Collect punctuation changes
+    punctuation_changes = collect_punctuation_changes(text, punctuation_corrected)
+
     # Step 3: Grammar correction
     chunks = split_text(punctuation_corrected, chunk_size=150)
     tasks = [asyncio.to_thread(grammar_correction_model, chunk, max_length=500, num_beams=1) for chunk in chunks]
     corrected_chunks = await asyncio.gather(*tasks)
-    
-    return " ".join(res[0]['generated_text'] for res in corrected_chunks if res)
+
+    final_text = " ".join(res[0]['generated_text'] for res in corrected_chunks if res)
+
+    return final_text, punctuation_changes
 
 # Request model
 class TextRequest(BaseModel):
@@ -69,14 +98,21 @@ async def process_text(text_data: TextRequest):
         input_text = text_data.text
         current_text = text_data.current
         text_to_exclude = set(re.split(r'(?<=[.!?])\s+', current_text))
-        
+
         sentences = re.split(r'(?<=[.!?])\s+', input_text)
-        corrected_sentences = await asyncio.gather(*(correct_text(sentence) for sentence in sentences))
-        
+        corrected_results = await asyncio.gather(*(correct_text(sentence) for sentence in sentences))
+
+        corrected_sentences = [res[0] for res in corrected_results]
+        punctuation_changes = [res[1] for res in corrected_results]
+        final_changes = [pc for pc in punctuation_changes if pc]
+
         result = current_text + " " + " ".join(filter(lambda s: s and s not in text_to_exclude, corrected_sentences))
-        
-        return {"corrected": result}
-    
+
+        return {
+            "corrected": result,
+            "punctuation_changes": final_changes
+        }
+
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))
