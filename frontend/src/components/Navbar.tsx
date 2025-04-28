@@ -7,9 +7,12 @@ const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <nav className="bg-purple-600 p-4 shadow-md">
+            <nav className="bg-purple-600 p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
-                <h1 className="text-white text-2xl font-bold">Grammar Corrector</h1>
+                <div className="flex items-center space-x-4">
+                    <img src="/src/assets/ai_logo.jpg" alt="Logo" className="w-10 h-10" />
+                    <h1 className="text-white text-2xl font-bold">Puncto-Ai</h1>
+                </div>
                 <button onClick={() => setIsOpen(!isOpen)} className="text-white focus:outline-none">
                     <Menu className="w-8 h-8" />
                 </button>
