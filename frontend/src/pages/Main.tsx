@@ -12,7 +12,7 @@ type PunctuationChange = {
 const Main: React.FC = () => {
   const [text, setText] = useState("");
   const [resultText, setResultText] = useState("");
-  const [current, setCurrent] = useState("");
+  //const [current, setCurrent] = useState("");
   const [isClicked, setIsClicked] = useState(false);
   const [punctuationChanges, setPunctuationChanges] = useState<PunctuationChange[]>([]);
   const maxWords = 500;
@@ -79,9 +79,9 @@ const Main: React.FC = () => {
         updatedText += newSentence + " ";
         
         const sentenceChanges = response.data.punctuation_changes.flat();
-        const adjustedChanges = sentenceChanges.map(change => ({
+        const adjustedChanges = (sentenceChanges as PunctuationChange[]).map((change) => ({
           ...change,
-          position: change.position + positionOffset
+          position: change.position + positionOffset,
         }));
         
         allPunctuationChanges = [...allPunctuationChanges, ...adjustedChanges];
@@ -93,7 +93,7 @@ const Main: React.FC = () => {
       
       allPunctuationChanges.sort((a, b) => a.position - b.position);
       setPunctuationChanges(allPunctuationChanges);
-      setCurrent(updatedText.trim());
+      //setCurrent(updatedText.trim());
       setIsClicked(false);
     } catch (error) {
       console.error(error);

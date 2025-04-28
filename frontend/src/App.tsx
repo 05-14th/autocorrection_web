@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { ParallaxBanner, ParallaxProvider } from "react-scroll-parallax";
+import { ParallaxProvider } from "react-scroll-parallax";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import About from "./pages/About";
