@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 
+
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -38,7 +39,7 @@ const Navbar: React.FC = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/about" className="text-white hover:underline" onClick={() => setIsOpen(false)}>
+                            <Link to="/#about-section" className="text-white hover:underline" onClick={() => setIsOpen(false)}>
                                 About
                             </Link>
                         </li>

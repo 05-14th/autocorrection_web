@@ -24,7 +24,7 @@ const Home: React.FC = () => {
           ]}
           className="relative w-full h-[100dvh] object-cover"
         />
-      <section className="min-h-[100dvh] bg-black/40 px-6 py-10 text-white flex flex-col justify-center items-center text-center">
+      <section id="about-section" className="min-h-[100dvh] bg-black/40 px-6 py-10 text-white flex flex-col justify-center items-center text-center">
         <div className="w-full max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-12">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
             Overview
