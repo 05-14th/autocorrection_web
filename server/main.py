@@ -6,8 +6,8 @@ from deepmultilingualpunctuation import PunctuationModel
 import torch, asyncio, re
 from symspellpy import SymSpell
 import pkg_resources
+from typing import List, Dict
 
-# Initialize FastAPI app
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -40,27 +40,56 @@ def correct_spelling(text):
     corrected_words = [sym_spell.lookup(word, verbosity=0, max_edit_distance=2) for word in words]
     return ' '.join([c[0].term if c else word for c, word in zip(corrected_words, words)])
 
-# Function to collect punctuation differences with positions and nearby words
-def collect_punctuation_changes(original, corrected):
+def find_punctuation_differences(original: str, corrected: str, offset: int = 0) -> List[Dict]:
+    """Compare two texts and return only actual punctuation changes with context."""
     diffs = []
+    punctuation = set(".,!?;:")
+
     orig_chars = list(original)
     corr_chars = list(corrected)
-
     min_len = min(len(orig_chars), len(corr_chars))
 
     for i in range(min_len):
-        if orig_chars[i] != corr_chars[i] and orig_chars[i] in ".!?,;:":
-            # Capture the words near the punctuation
-            before_word = original[:i].strip().split()[-1] if i > 0 else ""
-            after_word = original[i + 1:].strip().split()[0] if i + 1 < len(original) else ""
+        orig_char = orig_chars[i]
+        corr_char = corr_chars[i]
+
+        # Only log if punctuation changed (ignore if same punctuation or no change)
+        if (orig_char in punctuation or corr_char in punctuation) and orig_char != corr_char:
+            before = original[max(0, i-20):i].strip().split()
+            after = original[i+1:i+21].strip().split()
 
             diffs.append({
-                "position": i,
-                "original": orig_chars[i],
-                "corrected": corr_chars[i],
-                "before_word": before_word,
-                "after_word": after_word
+                "position": i + offset,
+                "original": orig_char if orig_char in punctuation else "",
+                "corrected": corr_char if corr_char in punctuation else "",
+                "before_word": before[-1] if before else "",
+                "after_word": after[0] if after else "",
+                "context": f"...{' '.join(before[-3:])}__{orig_char} → {corr_char}__{' '.join(after[:3])}..."
             })
+
+    # Handle differences caused by length mismatch
+    if len(orig_chars) > len(corr_chars):
+        for i in range(len(corr_chars), len(orig_chars)):
+            if orig_chars[i] in punctuation:
+                diffs.append({
+                    "position": i + offset,
+                    "original": orig_chars[i],
+                    "corrected": "",
+                    "before_word": "",
+                    "after_word": "",
+                    "context": f"...{' '.join(original[max(0,i-20):i].strip().split()[-3:])}__{orig_chars[i]}__..."
+                })
+    elif len(corr_chars) > len(orig_chars):
+        for i in range(len(orig_chars), len(corr_chars)):
+            if corr_chars[i] in punctuation:
+                diffs.append({
+                    "position": i + offset,
+                    "original": "",
+                    "corrected": corr_chars[i],
+                    "before_word": "",
+                    "after_word": "",
+                    "context": f"...__{corr_chars[i]}__{' '.join(corrected[i+1:i+21].strip().split()[:3])}..."
+                })
 
     return diffs
 
@@ -75,16 +104,15 @@ async def correct_text(text: str):
     # Step 2: Punctuation restoration
     punctuation_corrected = punctuation_model.restore_punctuation(spelling_corrected)
 
-    # Collect punctuation changes
-    punctuation_changes = collect_punctuation_changes(text, punctuation_corrected)
-
     # Step 3: Grammar correction
     chunks = split_text(punctuation_corrected, chunk_size=150)
     tasks = [asyncio.to_thread(grammar_correction_model, chunk, max_length=500, num_beams=1) for chunk in chunks]
     corrected_chunks = await asyncio.gather(*tasks)
-
     final_text = " ".join(res[0]['generated_text'] for res in corrected_chunks if res)
 
+    # Get punctuation changes by comparing original to final text
+    punctuation_changes = find_punctuation_differences(text, final_text)
+    
     return final_text, punctuation_changes
 
 # Request model
@@ -100,17 +128,37 @@ async def process_text(text_data: TextRequest):
         text_to_exclude = set(re.split(r'(?<=[.!?])\s+', current_text))
 
         sentences = re.split(r'(?<=[.!?])\s+', input_text)
-        corrected_results = await asyncio.gather(*(correct_text(sentence) for sentence in sentences))
+        
+        # Track cumulative position offset
+        cumulative_offset = len(current_text) + 1 if current_text else 0
+        all_punctuation_changes = []
+        corrected_sentences = []
+        
+        for sentence in sentences:
+            corrected, changes = await correct_text(sentence)
+            if corrected and corrected not in text_to_exclude:
+                # Update punctuation positions with the current offset
+                for change in changes:
+                    change["position"] += cumulative_offset
+                all_punctuation_changes.extend(changes)
+                
+                corrected_sentences.append(corrected)
+                # Update the offset for next sentence
+                cumulative_offset += len(corrected) + 1
 
-        corrected_sentences = [res[0] for res in corrected_results]
-        punctuation_changes = [res[1] for res in corrected_results]
-        final_changes = [pc for pc in punctuation_changes if pc]
+        result = current_text + " " + " ".join(corrected_sentences) if current_text else " ".join(corrected_sentences)
 
-        result = current_text + " " + " ".join(filter(lambda s: s and s not in text_to_exclude, corrected_sentences))
+        # Remove duplicate changes at the same position
+        unique_changes = []
+        seen_positions = set()
+        for change in sorted(all_punctuation_changes, key=lambda x: x["position"]):
+            if change["position"] not in seen_positions:
+                unique_changes.append(change)
+                seen_positions.add(change["position"])
 
         return {
             "corrected": result,
-            "punctuation_changes": final_changes
+            "punctuation_changes": unique_changes
         }
 
     except Exception as e:
