@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
             <nav className="bg-purple-600 p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
                 <div className="flex items-center space-x-4">
-                    <img src="/src/assets/ai_logo.jpg" alt="Logo" className="w-10 h-10" />
+                    <img src="/assets/ai_logo.jpg" alt="Logo" className="w-10 h-10" />
                     <h1 className="text-white text-2xl font-bold">Puncto-Ai</h1>
                 </div>
                 <button onClick={() => setIsOpen(!isOpen)} className="text-white focus:outline-none">
