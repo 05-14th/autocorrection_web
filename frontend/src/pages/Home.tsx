@@ -9,7 +9,7 @@ const Home: React.FC = () => {
     <div className="w-full">
        <ParallaxBanner
           layers={[
-            { image: "/src/assets/first_parallax.jpg", speed: -20 },
+            { image: "/assets/first_parallax.jpg", speed: -20 },
             {
               speed: -10,
               children: (
@@ -54,7 +54,7 @@ const Home: React.FC = () => {
       {/* Parallax Banner with Punctuation Chart */}
       <ParallaxBanner
         layers={[
-          { image: "/src/assets/third_parallax.jpg", speed: -20 },
+          { image: "/assets/third_parallax.jpg", speed: -20 },
           {
             speed: -10,
             children: (
