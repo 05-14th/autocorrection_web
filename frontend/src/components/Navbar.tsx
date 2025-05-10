@@ -44,6 +44,11 @@ const Navbar: React.FC = () => {
                             </Link>
                         </li>
                         <li>
+                            <Link to="/#table-section" className="text-white hover:underline" onClick={() => setIsOpen(false)}>
+                                Punctuations
+                            </Link>
+                        </li>
+                        <li>
                             <Link to="/contact" className="text-white hover:underline" onClick={() => setIsOpen(false)}>
                                 Contact
                             </Link>

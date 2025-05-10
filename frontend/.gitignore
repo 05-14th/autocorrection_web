@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+server/env
+
+# Ignore Python bytecode files
+**/__pycache__/
+*.pyc
 
 # Editor directories and files
 .vscode/*

@@ -25,24 +25,24 @@ const Main: React.FC = () => {
     const textChars = resultText.split('');
     const highlighted = [];
   
-    let changeMap = new Map<number, PunctuationChange>();
+    const punctuationSet = new Set(['.', ',', ';', ':', '!', '?', '-', '—', '(', ')', '[', ']', '"', "'"]);
+    const changeMap = new Map<number, PunctuationChange>();
+  
     punctuationChanges.forEach(change => {
-      changeMap.set(change.position, change);
+      if (punctuationSet.has(change.corrected)) {
+        changeMap.set(change.position, change);
+      }
     });
   
     for (let i = 0; i < textChars.length; i++) {
-      if (changeMap.has(i)) {
+      if (changeMap.has(i) && punctuationSet.has(textChars[i])) {
         highlighted.push(
           <span key={i} className="bg-green-600 text-white px-1 rounded">
             {textChars[i]}
           </span>
         );
       } else {
-        highlighted.push(
-          <span key={i}>
-            {textChars[i]}
-          </span>
-        );
+        highlighted.push(<span key={i}>{textChars[i]}</span>);
       }
     }
   
@@ -66,7 +66,7 @@ const Main: React.FC = () => {
   
       let updatedText = "";
       let allPunctuationChanges: PunctuationChange[] = [];
-      const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+      const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
       let positionOffset = 0;
 
       for (const sentence of sentences) {

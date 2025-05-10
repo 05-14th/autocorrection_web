@@ -11,7 +11,7 @@ from typing import List, Dict
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://autocorrection-web.vercel.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,7 +26,7 @@ punctuation_model = PunctuationModel()
 
 # Load SymSpell for fast spell correction
 sym_spell = SymSpell()
-dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
+dictionary_path = pkg_resources.resource_filename("symspellpy", "unigram_freq.csv")
 sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
 # Function to split text into manageable chunks
@@ -43,7 +43,9 @@ def correct_spelling(text):
 def find_punctuation_differences(original: str, corrected: str, offset: int = 0) -> List[Dict]:
     """Compare two texts and return only actual punctuation changes with context."""
     diffs = []
-    punctuation = set(".,!?;:")
+    punctuation = set([
+    ".", "?", "!", ";", ",", ":", "(", ")", "[", "]", "-", "–", "—", "’", '"', "'",
+    "..."])
 
     orig_chars = list(original)
     corr_chars = list(corrected)
