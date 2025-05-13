@@ -7,6 +7,10 @@ import torch, asyncio, re
 from symspellpy import SymSpell
 import pkg_resources
 from typing import List, Dict
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
+import difflib
 
 app = FastAPI()
 app.add_middleware(
@@ -29,6 +33,10 @@ sym_spell = SymSpell()
 dictionary_path = pkg_resources.resource_filename("symspellpy", "unigram_freq.csv")
 sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
+def restore_punctuation(text: str):
+    sentences = sent_tokenize(text)
+    return " ".join([punctuation_model.restore_punctuation(s) for s in sentences])
+
 # Function to split text into manageable chunks
 def split_text(text, chunk_size=100):
     words = text.split()
@@ -41,59 +49,32 @@ def correct_spelling(text):
     return ' '.join([c[0].term if c else word for c, word in zip(corrected_words, words)])
 
 def find_punctuation_differences(original: str, corrected: str, offset: int = 0) -> List[Dict]:
-    """Compare two texts and return only actual punctuation changes with context."""
     diffs = []
-    punctuation = set([
-    ".", "?", "!", ";", ",", ":", "(", ")", "[", "]", "-", "–", "—", "’", '"', "'",
-    "..."])
+    punctuation = set(".,!?;:'\"-()[]{}…")
 
-    orig_chars = list(original)
-    corr_chars = list(corrected)
-    min_len = min(len(orig_chars), len(corr_chars))
+    matcher = difflib.SequenceMatcher(None, original, corrected)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag in ("replace", "insert", "delete"):
+            orig_segment = original[i1:i2]
+            corr_segment = corrected[j1:j2]
 
-    for i in range(min_len):
-        orig_char = orig_chars[i]
-        corr_char = corr_chars[i]
-
-        # Only log if punctuation changed (ignore if same punctuation or no change)
-        if (orig_char in punctuation or corr_char in punctuation) and orig_char != corr_char:
-            before = original[max(0, i-20):i].strip().split()
-            after = original[i+1:i+21].strip().split()
-
-            diffs.append({
-                "position": i + offset,
-                "original": orig_char if orig_char in punctuation else "",
-                "corrected": corr_char if corr_char in punctuation else "",
-                "before_word": before[-1] if before else "",
-                "after_word": after[0] if after else "",
-                "context": f"...{' '.join(before[-3:])}__{orig_char} → {corr_char}__{' '.join(after[:3])}..."
-            })
-
-    # Handle differences caused by length mismatch
-    if len(orig_chars) > len(corr_chars):
-        for i in range(len(corr_chars), len(orig_chars)):
-            if orig_chars[i] in punctuation:
-                diffs.append({
-                    "position": i + offset,
-                    "original": orig_chars[i],
-                    "corrected": "",
-                    "before_word": "",
-                    "after_word": "",
-                    "context": f"...{' '.join(original[max(0,i-20):i].strip().split()[-3:])}__{orig_chars[i]}__..."
-                })
-    elif len(corr_chars) > len(orig_chars):
-        for i in range(len(orig_chars), len(corr_chars)):
-            if corr_chars[i] in punctuation:
-                diffs.append({
-                    "position": i + offset,
-                    "original": "",
-                    "corrected": corr_chars[i],
-                    "before_word": "",
-                    "after_word": "",
-                    "context": f"...__{corr_chars[i]}__{' '.join(corrected[i+1:i+21].strip().split()[:3])}..."
-                })
-
+            for k, (o, c) in enumerate(zip(orig_segment.ljust(len(corr_segment)), corr_segment.ljust(len(orig_segment)))):
+                if (o in punctuation or c in punctuation) and o != c:
+                    diffs.append({
+                        "position": i1 + k + offset,
+                        "original": o if o in punctuation else "",
+                        "corrected": c if c in punctuation else "",
+                        "context": f"...{original[max(0,i1-10):min(len(original),i2+10)]} → {corrected[max(0,j1-10):min(len(corrected),j2+10)]}..."
+                    })
     return diffs
+
+def normalize_punctuation(text: str) -> str:
+    # Remove duplicate punctuation
+    text = re.sub(r'([.,!?;:])\1+', r'\1', text)
+    # Fix spacing
+    text = re.sub(r'\s+([.,!?;:])', r'\1', text)
+    text = re.sub(r'([.,!?;:])(?=\w)', r'\1 ', text)
+    return text.strip()
 
 # Async function for grammar correction
 async def correct_text(text: str):
@@ -104,13 +85,13 @@ async def correct_text(text: str):
     spelling_corrected = correct_spelling(text)
 
     # Step 2: Punctuation restoration
-    punctuation_corrected = punctuation_model.restore_punctuation(spelling_corrected)
+    punctuation_corrected = restore_punctuation(spelling_corrected)
 
     # Step 3: Grammar correction
     chunks = split_text(punctuation_corrected, chunk_size=150)
     tasks = [asyncio.to_thread(grammar_correction_model, chunk, max_length=500, num_beams=1) for chunk in chunks]
     corrected_chunks = await asyncio.gather(*tasks)
-    final_text = " ".join(res[0]['generated_text'] for res in corrected_chunks if res)
+    final_text = normalize_punctuation(" ".join(res[0]['generated_text'] for res in corrected_chunks if res))
 
     # Get punctuation changes by comparing original to final text
     punctuation_changes = find_punctuation_differences(text, final_text)

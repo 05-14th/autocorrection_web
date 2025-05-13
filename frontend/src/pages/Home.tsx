@@ -115,7 +115,7 @@ const Home: React.FC = () => {
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                 <div className="space-y-6">
                   <h1 className="text-white text-6xl font-bold text-center drop-shadow-lg">
-                    I'm tired of wasting letters when punctuation will do, period.
+                    "I'm tired of wasting letters when punctuation will do, period."
                   </h1>
                   <h2 className="text-white text-4xl font-bold text-center drop-shadow-lg">
                     - Steve Martin

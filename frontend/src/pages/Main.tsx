@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 
 type PunctuationChange = {
@@ -20,34 +20,56 @@ const Main: React.FC = () => {
 
   // Function to highlight punctuation in the result text
   const highlightedText = useMemo(() => {
-    if (!resultText || punctuationChanges.length === 0) return resultText;
-  
-    const textChars = resultText.split('');
-    const highlighted = [];
-  
-    const punctuationSet = new Set(['.', ',', ';', ':', '!', '?', '-', '—', '(', ')', '[', ']', '"', "'"]);
-    const changeMap = new Map<number, PunctuationChange>();
-  
-    punctuationChanges.forEach(change => {
-      if (punctuationSet.has(change.corrected)) {
-        changeMap.set(change.position, change);
-      }
-    });
-  
-    for (let i = 0; i < textChars.length; i++) {
-      if (changeMap.has(i) && punctuationSet.has(textChars[i])) {
-        highlighted.push(
+    if (!text || !resultText) return resultText;
+
+    const punctuation = new Set([
+      ".", ",", ";", ":", "!", "?", "(", ")", "[", "]",
+      "-", "–", "—", "'", '"', "…", "‘", "’", "“", "”"
+    ]);
+    const result: React.ReactNode[] = [];
+
+    const minLength = Math.min(text.length, resultText.length);
+    let i = 0;
+
+    while (i < minLength) {
+      const originalChar = text[i]?.normalize("NFC");
+      const correctedChar = resultText[i]?.normalize("NFC");
+
+      if (originalChar !== correctedChar && punctuation.has(correctedChar)) {
+        result.push(
           <span key={i} className="bg-green-600 text-white px-1 rounded">
-            {textChars[i]}
+            {correctedChar}
           </span>
         );
       } else {
-        highlighted.push(<span key={i}>{textChars[i]}</span>);
+        result.push(<span key={i}>{correctedChar}</span>);
+      }
+      i++;
+    }
+
+    // Add remaining characters if resultText is longer
+    if (resultText.length > minLength) {
+      for (let j = minLength; j < resultText.length; j++) {
+        const char = resultText[j];
+        if (punctuation.has(char)) {
+          result.push(
+            <span key={j} className="bg-green-600 text-white px-1 rounded">
+              {char}
+            </span>
+          );
+        } else {
+          result.push(<span key={j}>{char}</span>);
+        }
       }
     }
-  
-    return highlighted;
-  }, [resultText, punctuationChanges]);
+
+    return result;
+  }, [text, resultText]);
+
+  const [safeToRender, setSafeToRender] = useState(false);
+  useEffect(() => {
+    setSafeToRender(true);
+  }, []);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const words = e.target.value.split(/\s+/).filter((word) => word.length > 0);
@@ -87,7 +109,7 @@ const Main: React.FC = () => {
         allPunctuationChanges = [...allPunctuationChanges, ...adjustedChanges];
         positionOffset += newSentence.length + 1;
 
-        setResultText(prev => `${prev} ${newSentence}`.trim());
+        setResultText(updatedText.trim());
         setPunctuationChanges(prev => [...prev, ...adjustedChanges]);
       }
       
@@ -130,7 +152,7 @@ const Main: React.FC = () => {
         {/* Output Section with Highlighted Punctuation */}
         <section className="w-full md:w-1/2 flex flex-col">
           <div className="w-full h-[80dvh] p-4 border border-gray-600 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none overflow-y-auto whitespace-pre-wrap">
-            {highlightedText.length > 0 ? (
+            {safeToRender && highlightedText.length > 0 ? (
               highlightedText
             ) : (
               <p className="text-gray-400">Corrected text will display here...</p>
