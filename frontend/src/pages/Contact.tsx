@@ -55,13 +55,13 @@ const Contact: React.FC = () => {
         alt={name}
         className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-purple-300 object-cover shrink-0"
       />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="font-bold text-lg sm:text-xl mb-1 truncate">{name}</p>
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300 shrink-0" />
           <button
             onClick={() => openGmailCompose(email)}
-            className="hover:underline text-left text-base sm:text-lg break-all"
+            className="hover:underline text-left text-base sm:text-lg whitespace-nowrap overflow-hidden text-ellipsis"
           >
             {email}
           </button>
