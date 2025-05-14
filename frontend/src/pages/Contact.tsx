@@ -6,7 +6,6 @@ const Contact: React.FC = () => {
     window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`, "_blank");
   };
 
-  // Project Heads with unique image URLs
   const projectHeads = [
     {
       name: "Princess Anne Lagumen",
@@ -35,7 +34,6 @@ const Contact: React.FC = () => {
     },
   ];
 
-  // Developer with a distinct image
   const developer = {
     name: "Gerry Vien Flores",
     email: "gerryvienlifeflores@gmail.com",
@@ -51,19 +49,19 @@ const Contact: React.FC = () => {
     email: string;
     image: string;
   }) => (
-    <div className="flex items-center gap-4 md:gap-6 p-3 md:p-4 hover:bg-white/10 rounded-2xl md:rounded-lg transition-all">
+    <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 sm:gap-6 p-3 sm:p-4 hover:bg-white/10 rounded-2xl transition-all">
       <img
         src={image}
         alt={name}
-        className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-purple-300 object-cover"
+        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-purple-300 object-cover shrink-0"
       />
-      <div>
-        <p className="font-bold text-lg md:text-xl mb-1">{name}</p>
-        <div className="flex items-center gap-2 md:gap-3">
-          <Mail className="w-5 h-5 md:w-6 md:h-6 text-purple-300" />
+      <div className="min-w-0">
+        <p className="font-bold text-lg sm:text-xl mb-1 truncate">{name}</p>
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
           <button
             onClick={() => openGmailCompose(email)}
-            className="hover:underline text-left text-base md:text-lg"
+            className="hover:underline text-left text-base sm:text-lg break-all"
           >
             {email}
           </button>
@@ -73,16 +71,16 @@ const Contact: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-700 to-black p-4 md:p-8">
-      <div className="bg-white/10 backdrop-blur-lg p-6 md:p-10 rounded-3xl md:rounded-2xl shadow-2xl max-w-4xl w-full text-white mx-4 md:mx-0">
-        <h2 className="text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center">Contact Us</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-700 to-black p-4 sm:p-8">
+      <div className="bg-white/10 backdrop-blur-lg p-6 sm:p-10 rounded-3xl shadow-2xl max-w-4xl w-full text-white mx-4 sm:mx-0">
+        <h2 className="text-4xl sm:text-5xl font-bold mb-8 sm:mb-12 text-center">Contact Us</h2>
 
         {/* Project Heads */}
-        <div className="mb-10 md:mb-12">
-          <h3 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6 border-b-2 border-purple-400 pb-2 md:pb-3">
+        <div className="mb-10 sm:mb-12">
+          <h3 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 border-b-2 border-purple-400 pb-2 sm:pb-3">
             Project Heads
           </h3>
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {projectHeads.map((contact, idx) => (
               <div key={idx}>{renderContact(contact)}</div>
             ))}
@@ -91,10 +89,10 @@ const Contact: React.FC = () => {
 
         {/* Developer */}
         <div>
-          <h3 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6 border-b-2 border-purple-400 pb-2 md:pb-3">
+          <h3 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 border-b-2 border-purple-400 pb-2 sm:pb-3">
             Developer
           </h3>
-          <div className="space-y-4 md:space-y-6">{renderContact(developer)}</div>
+          <div className="space-y-4 sm:space-y-6">{renderContact(developer)}</div>
         </div>
       </div>
     </div>
