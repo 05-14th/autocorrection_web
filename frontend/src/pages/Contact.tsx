@@ -14,8 +14,8 @@ const Contact: React.FC = () => {
       image: "/pictures/lagumen.jpg",
     },
     {
-      name: "Joy Arendain",
-      email: "Arejoy04@gmail.com",
+      name: "Joy Ann Arendain",
+      email: "arejoy04@gmail.com",
       image: "/pictures/arendain.jpg",
     },
     {
@@ -51,19 +51,19 @@ const Contact: React.FC = () => {
     email: string;
     image: string;
   }) => (
-    <div className="flex items-center gap-6 p-4 hover:bg-white/10 rounded-lg transition-all">
+    <div className="flex items-center gap-4 md:gap-6 p-3 md:p-4 hover:bg-white/10 rounded-2xl md:rounded-lg transition-all">
       <img
         src={image}
         alt={name}
-        className="w-20 h-20 rounded-full border-4 border-purple-300 object-cover"
+        className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-purple-300 object-cover"
       />
       <div>
-        <p className="font-bold text-xl mb-1">{name}</p>
-        <div className="flex items-center gap-3">
-          <Mail className="w-6 h-6 text-purple-300" />
+        <p className="font-bold text-lg md:text-xl mb-1">{name}</p>
+        <div className="flex items-center gap-2 md:gap-3">
+          <Mail className="w-5 h-5 md:w-6 md:h-6 text-purple-300" />
           <button
             onClick={() => openGmailCompose(email)}
-            className="hover:underline text-left text-lg"
+            className="hover:underline text-left text-base md:text-lg"
           >
             {email}
           </button>
@@ -73,14 +73,16 @@ const Contact: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-700 to-black p-8">
-      <div className="bg-white/10 backdrop-blur-lg p-10 rounded-2xl shadow-2xl max-w-4xl w-full text-white">
-        <h2 className="text-5xl font-bold mb-12 text-center">Contact Us</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-700 to-black p-4 md:p-8">
+      <div className="bg-white/10 backdrop-blur-lg p-6 md:p-10 rounded-3xl md:rounded-2xl shadow-2xl max-w-4xl w-full text-white mx-4 md:mx-0">
+        <h2 className="text-4xl md:text-5xl font-bold mb-8 md:mb-12 text-center">Contact Us</h2>
 
         {/* Project Heads */}
-        <div className="mb-12">
-          <h3 className="text-3xl font-semibold mb-6 border-b-2 border-purple-400 pb-3">Project Heads</h3>
-          <div className="space-y-8">
+        <div className="mb-10 md:mb-12">
+          <h3 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6 border-b-2 border-purple-400 pb-2 md:pb-3">
+            Project Heads
+          </h3>
+          <div className="space-y-6 md:space-y-8">
             {projectHeads.map((contact, idx) => (
               <div key={idx}>{renderContact(contact)}</div>
             ))}
@@ -89,8 +91,10 @@ const Contact: React.FC = () => {
 
         {/* Developer */}
         <div>
-          <h3 className="text-3xl font-semibold mb-6 border-b-2 border-purple-400 pb-3">Developer</h3>
-          <div className="space-y-6">{renderContact(developer)}</div>
+          <h3 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6 border-b-2 border-purple-400 pb-2 md:pb-3">
+            Developer
+          </h3>
+          <div className="space-y-4 md:space-y-6">{renderContact(developer)}</div>
         </div>
       </div>
     </div>
